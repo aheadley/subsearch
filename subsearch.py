@@ -458,7 +458,7 @@ def search(dbpath, query, upload=False, image=None, rand=False, webm=False, wigg
     if not r:
         return
 
-    res = [random.choice(r),] if rand else r
+    res = [weighted_random_choice(r, weight=lambda c: c.score)] if rand else r
 
     for i, ev in enumerate(res):
         click.echo('Score: {}'.format(ev.score))
@@ -496,6 +496,17 @@ def search(dbpath, query, upload=False, image=None, rand=False, webm=False, wigg
 
         if upload:
             do_upload(image_fn)
+
+def weighted_random_choice(choices, weight=lambda c: 1.0):
+    ratio = 1.0 / sum(weight(c) for c in choices)
+    n = random.random()
+    for w, v in ((weight(c), c) for c in choices):
+        n -= (w * ratio)
+        if n <= 0.0:
+            return v
+    else:
+        return max(choices, key=weight)
+
 
 def get_clip_times(event, silences, wiggle=1.0):
     ev_start = event.start / 1000
