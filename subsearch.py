@@ -245,6 +245,7 @@ class Result:
     content = attr.ib()
     start = attr.ib()
     end = attr.ib()
+    score = attr.ib(default=0.0)
 
     @property
     def midpoint(self):
@@ -327,9 +328,11 @@ class Database:
     def search(self, query, **kwargs):
         q = whoosh.qparser.QueryParser("content", self.ix.schema).parse(query)
         with self.ix.searcher() as searcher:
-            for r in searcher.search(q, **kwargs):
+            results = searcher.search(q, **kwargs)
+            for i, r in enumerate(results):
                 d = dict(r)
                 d['path'] = os.path.normpath(os.path.join(self.path, d['path']))
+                d['score'] = results.score(i)
                 yield Result(**d)
 
     def apply_recursive(self, method, path, *args, **kwargs):
@@ -458,6 +461,7 @@ def search(dbpath, query, upload=False, image=None, rand=False, webm=False, wigg
     res = [random.choice(r),] if rand else r
 
     for i, ev in enumerate(res):
+        click.echo('Score: {}'.format(ev.score))
         click.echo('Path: {}'.format(ev.path))
         click.echo('Time: {:.03f} - {:.03f}'.format(ev.start / 1000, ev.end / 1000))
         click.echo('Content: {}'.format(' \\ '.join(line.strip()
