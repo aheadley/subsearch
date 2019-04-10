@@ -67,7 +67,8 @@ def cmd_animeme(bot, trigger):
         if out:
             results = dict(map(lambda e: e.strip(), l.strip().split(':', 1)) for l in out.splitlines() if ':' in l)
             try:
-                response = '"{}" <{}>'.format(results['Content'], results['Url'])
+                response = '"{}" from {} <{}>'.format(
+                    results['Content'], os.path.basename(results['Path']), results['Url'])
             except KeyError:
                 log.debug(out)
                 bot.reply('Something went wrong, no url found')
